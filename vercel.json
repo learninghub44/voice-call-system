@@ -1,16 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/scheduler?job=queue-processor",
-      "schedule": "*/1 * * * *"
-    },
-    {
-      "path": "/api/cron/scheduler?job=automation-rules",
-      "schedule": "*/2 * * * *"
-    },
-    {
-      "path": "/api/cron/scheduler?job=campaign-runner",
-      "schedule": "*/5 * * * *"
+      "path": "/api/cron/scheduler",
+      "schedule": "0 * * * *"
     }
   ],
   "functions": {
