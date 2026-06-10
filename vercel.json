@@ -2,25 +2,25 @@
   "crons": [
     {
       "path": "/api/cron/scheduler?job=queue-processor",
-      "schedule": "*/30 * * * * *"
-    },
-    {
-      "path": "/api/cron/scheduler?job=automation-rules",
       "schedule": "*/1 * * * *"
     },
     {
-      "path": "/api/cron/scheduler?job=campaign-runner",
+      "path": "/api/cron/scheduler?job=automation-rules",
       "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/scheduler?job=campaign-runner",
+      "schedule": "*/5 * * * *"
     }
   ],
   "functions": {
-    "src/api/webhooks/*.ts": {
+    "pages/api/webhooks/*.ts": {
       "maxDuration": 10
     },
-    "src/api/**/*.ts": {
+    "pages/api/**/*.ts": {
       "maxDuration": 30
     },
-    "src/workers/scheduler.ts": {
+    "pages/api/cron/scheduler.ts": {
       "maxDuration": 60
     }
   }
