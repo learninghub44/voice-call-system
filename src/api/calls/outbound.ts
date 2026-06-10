@@ -44,14 +44,13 @@ async function handler(
   )
 
   if (!result.ok) {
-    log.error({ error: result.error.message }, 'outbound: failed to initiate call')
+    log.error({ error: result.error.message }, 'outbound: failed')
     return res.status(result.error.statusCode()).json({
       error: result.error.message,
       code: result.error.code,
     })
   }
 
-  log.info({ callId: result.value.id }, 'outbound: call initiated')
   return res.status(201).json(result.value)
 }
 
