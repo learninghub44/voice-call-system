@@ -11,11 +11,13 @@ const schema = z.object({
   to: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Must be E.164 format'),
   from: z.string().regex(/^\+[1-9]\d{1,14}$/).optional(),
   campaignId: z.string().optional(),
-  scheduledAt: z.string().datetime().optional().transform((v) => (v ? new Date(v) : undefined)),
+  scheduledAt: z.string().datetime().optional(),
 })
 
+type SchemaInput = z.infer<typeof schema>
+
 async function handler(
-  req: NextApiRequest & { parsedBody: z.infer<typeof schema> },
+  req: NextApiRequest & { parsedBody: SchemaInput },
   res: NextApiResponse
 ): Promise<void> {
   const requestId = randomUUID()
@@ -26,7 +28,15 @@ async function handler(
     return
   }
 
-  const result = await outboundService.initiateCall(req.parsedBody, requestId)
+  const { scheduledAt, ...rest } = req.parsedBody
+
+  const result = await outboundService.initiateCall(
+    {
+      ...rest,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
+    },
+    requestId
+  )
 
   if (!result.ok) {
     log.error({ error: result.error.message }, 'outbound: failed to initiate call')
