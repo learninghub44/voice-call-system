@@ -14,10 +14,15 @@ const schema = z.object({
   scheduledAt: z.string().datetime().optional(),
 })
 
-type SchemaInput = z.infer<typeof schema>
+type SchemaOutput = {
+  to: string
+  from?: string
+  campaignId?: string
+  scheduledAt?: string
+}
 
 async function handler(
-  req: NextApiRequest & { parsedBody: SchemaInput },
+  req: NextApiRequest & { parsedBody: SchemaOutput },
   res: NextApiResponse
 ): Promise<void> {
   const requestId = randomUUID()
@@ -50,4 +55,4 @@ async function handler(
   return res.status(201).json(result.value)
 }
 
-export default withAuth(withValidation(schema, handler))
+export default withAuth(withValidation<SchemaOutput>(schema, handler))

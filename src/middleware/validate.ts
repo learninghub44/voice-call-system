@@ -2,13 +2,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ZodSchema, ZodError } from 'zod'
 
-type NextApiHandler<T = unknown> = (
-  req: NextApiRequest & { body: T },
-  res: NextApiResponse
-) => Promise<void> | void
-
 export function withValidation<T>(
-  schema: ZodSchema<T>,
+  schema: ZodSchema,
   handler: (req: NextApiRequest & { parsedBody: T }, res: NextApiResponse) => Promise<void> | void
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
@@ -24,14 +19,14 @@ export function withValidation<T>(
     }
 
     const parsedReq = req as NextApiRequest & { parsedBody: T }
-    parsedReq.parsedBody = result.data
+    parsedReq.parsedBody = result.data as T
 
     return handler(parsedReq, res)
   }
 }
 
 export function withQueryValidation<T>(
-  schema: ZodSchema<T>,
+  schema: ZodSchema,
   handler: (req: NextApiRequest & { parsedQuery: T }, res: NextApiResponse) => Promise<void> | void
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
@@ -47,7 +42,7 @@ export function withQueryValidation<T>(
     }
 
     const parsedReq = req as NextApiRequest & { parsedQuery: T }
-    parsedReq.parsedQuery = result.data
+    parsedReq.parsedQuery = result.data as T
 
     return handler(parsedReq, res)
   }
