@@ -1,0 +1,168 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentStatus {
+  ONLINE
+  BUSY
+  OFFLINE
+  BREAK
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallStatus {
+  INITIATED
+  RINGING
+  ANSWERED
+  QUEUED
+  COMPLETED
+  FAILED
+}
+
+enum SmsTrigger {
+  MISSED_CALL
+  OTP
+  REMINDER
+  CALLBACK_ALERT
+}
+
+enum CampaignStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  isVip     Boolean  @default(false)
+  callCount Int      @default(0)
+  createdAt DateTime @default(now())
+  calls     Call[]
+}
+
+model Agent {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  status        AgentStatus @default(OFFLINE)
+  skills        String[]
+  shiftStart    DateTime?
+  shiftEnd      DateTime?
+  currentCallId String?     @unique
+  currentCall   Call?       @relation("AgentCurrentCall", fields: [currentCallId], references: [id])
+  calls         Call[]      @relation("AgentCalls")
+  createdAt     DateTime    @default(now())
+}
+
+model Call {
+  id                  String        @id @default(cuid())
+  telnyxCallControlId String        @unique
+  telnyxCallSessionId String?
+  direction           CallDirection
+  status              CallStatus    @default(INITIATED)
+  fromNumber          String
+  toNumber            String
+  ivrPath             String?
+  recordingUrl        String?
+  durationSeconds     Int?
+  scheduledAt         DateTime?
+  campaignId          String?
+  agentId             String?
+  userId              String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  agent               Agent?        @relation("AgentCalls", fields: [agentId], references: [id])
+  user                User?         @relation(fields: [userId], references: [id])
+  campaign            Campaign?     @relation(fields: [campaignId], references: [id])
+  agentCurrentFor     Agent?        @relation("AgentCurrentCall")
+  queueEntry          QueueEntry?
+  events              CallEvent[]
+  recording           Recording?
+  ivrLogs             IvrLog[]
+}
+
+model QueueEntry {
+  id                String   @id @default(cuid())
+  callId            String   @unique
+  call              Call     @relation(fields: [callId], references: [id])
+  position          Int
+  priority          Int      @default(0)
+  requiredSkill     String?
+  estimatedWaitSecs Int      @default(0)
+  enteredAt         DateTime @default(now())
+}
+
+model IvrLog {
+  id        String   @id @default(cuid())
+  callId    String
+  call      Call     @relation(fields: [callId], references: [id])
+  digit     String
+  routedTo  String
+  timestamp DateTime @default(now())
+}
+
+model SmsLog {
+  id              String     @id @default(cuid())
+  to              String
+  from            String
+  body            String
+  trigger         SmsTrigger
+  telnyxMessageId String?    @unique
+  status          String     @default("sent")
+  createdAt       DateTime   @default(now())
+}
+
+model CallEvent {
+  id         String   @id @default(cuid())
+  callId     String
+  call       Call     @relation(fields: [callId], references: [id])
+  eventType  String
+  payload    Json
+  receivedAt DateTime @default(now())
+}
+
+model Recording {
+  id           String   @id @default(cuid())
+  callId       String   @unique
+  call         Call     @relation(fields: [callId], references: [id])
+  url          String
+  durationSecs Int?
+  type         String   @default("CALL")
+  storedAt     DateTime @default(now())
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  status      CampaignStatus @default(DRAFT)
+  targets     String[]
+  scheduledAt DateTime?
+  retryCount  Int            @default(0)
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  calls       Call[]
+}
+
+model AutomationRule {
+  id          String    @id @default(cuid())
+  trigger     String
+  condition   Json
+  action      String
+  enabled     Boolean   @default(true)
+  lastFiredAt DateTime?
+  createdAt   DateTime  @default(now())
+}

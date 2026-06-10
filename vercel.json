@@ -1,0 +1,27 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/scheduler?job=queue-processor",
+      "schedule": "*/30 * * * * *"
+    },
+    {
+      "path": "/api/cron/scheduler?job=automation-rules",
+      "schedule": "*/1 * * * *"
+    },
+    {
+      "path": "/api/cron/scheduler?job=campaign-runner",
+      "schedule": "*/2 * * * *"
+    }
+  ],
+  "functions": {
+    "src/api/webhooks/*.ts": {
+      "maxDuration": 10
+    },
+    "src/api/**/*.ts": {
+      "maxDuration": 30
+    },
+    "src/workers/scheduler.ts": {
+      "maxDuration": 60
+    }
+  }
+}
