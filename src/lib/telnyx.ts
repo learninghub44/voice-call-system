@@ -1,5 +1,5 @@
 // src/lib/telnyx.ts
-import Telnyx from 'telnyx'
+import { Telnyx } from 'telnyx'
 import { env } from '../config/env'
 import { AppError, ErrorCode, ok, err, Result } from '../types/result.types'
 import type {
@@ -11,11 +11,11 @@ import type {
 
 declare global {
   // eslint-disable-next-line no-var
-  var __telnyx: ReturnType<typeof Telnyx> | undefined
+  var __telnyx: Telnyx | undefined
 }
 
 function createTelnyxClient() {
-  return Telnyx(env.TELNYX_API_KEY)
+  return new Telnyx({ apiKey: env.TELNYX_API_KEY })
 }
 
 export const telnyx = globalThis.__telnyx ?? createTelnyxClient()
@@ -35,7 +35,7 @@ export const calls = {
     params: TelnyxInitiateCallParams
   ): Promise<Result<{ callControlId: string; callSessionId: string }, AppError>> {
     try {
-      const response = await telnyx.calls.create({
+      const response = await telnyx.calls.dial({
         connection_id: params.connection_id,
         to: params.to,
         from: params.from,
@@ -46,7 +46,10 @@ export const calls = {
           : undefined,
         timeout_secs: params.timeout_secs ?? 30,
       })
-      const data = response.data as { call_control_id: string; call_session_id: string }
+      const data = response.data
+      if (!data) {
+        return err(new AppError(ErrorCode.TELNYX_ERROR, 'No data in response'))
+      }
       return ok({
         callControlId: data.call_control_id,
         callSessionId: data.call_session_id,
@@ -61,10 +64,10 @@ export const calls = {
     params: TelnyxSpeakParams
   ): Promise<Result<void, AppError>> {
     try {
-      await telnyx.calls.speak(callControlId, {
-        language: params.language,
-        voice: params.voice,
+      await telnyx.calls.actions.speak(callControlId, {
         payload: params.payload,
+        voice: params.voice,
+        language: params.language as any,
         payload_type: params.payload_type ?? 'text',
       })
       return ok(undefined)
@@ -75,7 +78,7 @@ export const calls = {
 
   async hangup(callControlId: string): Promise<Result<void, AppError>> {
     try {
-      await telnyx.calls.hangup(callControlId, {})
+      await telnyx.calls.actions.hangup(callControlId, {})
       return ok(undefined)
     } catch (error) {
       return err(mapTelnyxError(error))
@@ -87,11 +90,10 @@ export const calls = {
     params: TelnyxTransferParams
   ): Promise<Result<void, AppError>> {
     try {
-      await telnyx.calls.transfer(callControlId, {
+      await telnyx.calls.actions.transfer(callControlId, {
         to: params.to,
         from: params.from,
         timeout_secs: params.timeout_secs ?? 30,
-        webhook_url: params.webhook_url,
       })
       return ok(undefined)
     } catch (error) {
@@ -104,8 +106,8 @@ export const calls = {
     targetCallControlId: string
   ): Promise<Result<void, AppError>> {
     try {
-      await telnyx.calls.bridge(callControlId, {
-        call_control_id: targetCallControlId,
+      await telnyx.calls.actions.bridge(callControlId, {
+        call_control_id_to_bridge_with: targetCallControlId,
       })
       return ok(undefined)
     } catch (error) {
@@ -118,10 +120,9 @@ export const calls = {
     params: TelnyxRecordingParams = {}
   ): Promise<Result<void, AppError>> {
     try {
-      await telnyx.calls.recordStart(callControlId, {
+      await telnyx.calls.actions.startRecording(callControlId, {
         format: params.format ?? 'mp3',
         channels: params.channels ?? 'single',
-        play_beep: params.play_beep ?? false,
       })
       return ok(undefined)
     } catch (error) {
@@ -131,7 +132,7 @@ export const calls = {
 
   async stopRecording(callControlId: string): Promise<Result<void, AppError>> {
     try {
-      await telnyx.calls.recordStop(callControlId, {})
+      await telnyx.calls.actions.stopRecording(callControlId, {})
       return ok(undefined)
     } catch (error) {
       return err(mapTelnyxError(error))

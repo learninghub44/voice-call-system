@@ -19,14 +19,6 @@ export function withTelnyxSignature(
     const requestId = randomUUID()
     const log = createLogger(requestId)
 
-    const signature = req.headers['telnyx-signature-ed25519'] as string | undefined
-    const timestamp = req.headers['telnyx-timestamp'] as string | undefined
-
-    if (!signature || !timestamp) {
-      log.warn({ path: req.url }, 'Missing Telnyx signature headers')
-      return res.status(400).json({ error: 'Missing signature headers' })
-    }
-
     // Raw body must be available — ensure bodyParser is disabled for this route
     const rawBody: string | Buffer | undefined = (req as NextApiRequest & { rawBody?: string | Buffer }).rawBody
 
@@ -38,12 +30,12 @@ export function withTelnyxSignature(
     try {
       const rawBodyString = Buffer.isBuffer(rawBody) ? rawBody.toString('utf-8') : rawBody
 
-      const event = telnyx.webhooks.constructEvent(
-        rawBodyString,
-        signature,
-        timestamp,
-        env.TELNYX_PUBLIC_KEY
-      )
+      // Use the new Telnyx SDK webhook verification
+      // The unwrap method automatically verifies the signature from headers
+      // It throws TelnyxWebhookVerificationError if verification fails
+      const event = await telnyx.webhooks.unwrap(rawBodyString, {
+        headers: req.headers as Record<string, string>,
+      })
 
       const verifiedReq = req as TelnyxVerifiedRequest
       verifiedReq.telnyxEvent = event as unknown as Record<string, unknown>

@@ -20,7 +20,7 @@ export async function send(
   log.info('smsService.send: start')
 
   try {
-    const response = await telnyx.messages.create({
+    const response = await telnyx.messages.send({
       from: env.TELNYX_PHONE_NUMBER,
       to: params.to,
       text: params.body,

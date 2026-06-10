@@ -37,7 +37,7 @@ export async function routeCall(
 
   // Step 3: Round-robin selection using Redis counter
   const rrIndex = await getRoundRobinIndex(skill)
-  const selectedAgent = agents[rrIndex % agents.length]
+  const selectedAgent = agents[rrIndex % agents.length]!
 
   // Step 4: VIP logic — for v1 we still assign from available agents, flag for v2 upgrade
   if (priority === 1) {

@@ -159,7 +159,7 @@ export async function logEvent(
 ): Promise<Result<void, AppError>> {
   try {
     await prisma.callEvent.create({
-      data: { callId, eventType, payload },
+      data: { callId, eventType, payload: payload as any },
     })
     return ok(undefined)
   } catch (error) {
