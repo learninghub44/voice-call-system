@@ -1,10 +1,10 @@
-# voice call system
+# Voice Call System
 
-unofficial use without owner consent is a breach 
+A TypeScript service handling voice call routing and management.
 
 ## Overview
 
-This repository contains the source code for **voice call system**, a project developed and maintained by Chris Odhiambo (learninghub44). It is part of a portfolio of production and in-progress software products, several of which target the Kenyan and East African market.
+This repository contains the source code for **Voice Call System**, a project developed and maintained by Kadem Tech. It is part of a portfolio of production and in-progress software products, several of which target the Kenyan and East African market.
 
 ## Tech Stack
 
@@ -15,7 +15,7 @@ This repository contains the source code for **voice call system**, a project de
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/learninghub44/voice-call-system.git
+   git clone https://github.com/Kadem-Tech/voice-call-system.git
    cd voice-call-system
    ```
 2. Install dependencies (see `package.json`, `requirements.txt`, or equivalent manifest in this repo for the exact commands).
